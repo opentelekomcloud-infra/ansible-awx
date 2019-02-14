@@ -1,0 +1,18 @@
+---
+# defaults file for awx
+packages: []
+
+awx_git_repo: "https://github.com/ansible/awx.git"
+awx_root: "~/workspace/awx"
+awx_inventory_location: "{{ ( awx_root + '/installer/inventory' )}}"
+awx_requirements_location: "{{ ( awx_root + '/requirements/requirements_ansible.txt' )}}"
+
+awx_host_port: 10080
+
+proxy_pass: "{{ ('http://localhost:' + (awx_host_port | string)) }}"
+
+nginx_etc_location: /etc/nginx
+nginx_conf_location: "{{ (nginx_etc_location + '/nginx.conf') }}"
+nginx_ssl_location: "{{ (nginx_etc_location + '/ssl') }}"
+nginx_confd_location: "{{ (nginx_etc_location + '/conf.d') }}"
+nginx_log_location: /var/log/nginx

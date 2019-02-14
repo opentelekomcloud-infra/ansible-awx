@@ -1,0 +1,14 @@
+---
+# A playbook, which will be invoked by the ansible-pull from the AWX
+
+- name: Provision myself
+  hosts: localhost
+  tasks:
+    - name: do something 2
+      debug:
+        var: hostvars
+
+    - name: do something more 2
+      copy:
+        content: "test2"
+        dest: "~/test2"

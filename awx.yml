@@ -1,0 +1,8 @@
+---
+# A playbook, which will be invoked by the ansible-pull from the AWX
+
+- name: Provision myself
+  hosts: localhost
+  roles:
+    - role: awx
+    - role: nginx

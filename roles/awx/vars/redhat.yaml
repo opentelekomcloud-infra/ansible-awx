@@ -1,0 +1,6 @@
+---
+packages:
+  - postgresql
+  - docker
+  - docker-compose
+  - python3-docker

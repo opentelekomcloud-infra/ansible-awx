@@ -1,0 +1,30 @@
+---
+
+- name: install nginx
+  become: true
+  package:
+    name: nginx
+    state: present
+
+- name: replace config
+  become: true
+  template:
+    src: nginx.conf
+    dest: "{{ nginx_conf_location }}"
+
+- name: create ssl dir
+  become: true
+  file:
+    path: "{{ nginx_ssl_location }}"
+    state: directory
+
+- name: generate dhparam
+  openssl_dhparam:
+    path: "{{ (nginx_ssl_location + '/dhparams.pem')}}"
+
+- name: nginx service
+  become: true
+  systemd:
+    name: nginx
+    enabled: yes
+    state: started

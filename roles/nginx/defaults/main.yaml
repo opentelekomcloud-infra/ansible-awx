@@ -1,0 +1,9 @@
+---
+# defaults file for nginx
+
+nginx_etc_location: /etc/nginx
+
+nginx_conf_location: "{{ (nginx_etc_location + '/nginx.conf') }}"
+nginx_ssl_location: "{{ (nginx_etc_location + '/ssl') }}"
+nginx_confd_location: "{{ (nginx_etc_location + '/conf.d') }}"
+nginx_log_location: /var/log/nginx

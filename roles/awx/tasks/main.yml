@@ -1,0 +1,66 @@
+---
+# tasks file for awx
+- name: include OS-specific variables.
+  include_vars: "{{ ansible_os_family|lower }}.yaml"
+  when: ansible_os_family == 'RedHat'
+
+- name: install often required packages
+  become: true
+  package:
+    state: present
+    name: "{{ item }}"
+  with_items: "{{ packages }}"
+  when: packages is defined
+  register: task_result
+  until: task_result is success
+  retries: 5
+  delay: 2
+
+- name: enable docker
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: enable services in firewalld
+  firewalld:
+    service: "{{item}}"
+    permanent: yes
+    zone: public
+    state: enabled
+  loop:
+    - http
+    - https
+  register: firewalld_results
+
+- set_fact:
+    firewalld_reload_required: true
+  when: item.changed
+  loop: "{{ firewalld_results.results }}"
+
+- name: Bounce firewalld
+  service: name=firewalld state=restarted
+  when: firewalld_reload_required is defined and firewalld_reload_required
+
+- name: Checkout AWX repo
+  git:
+    repo: "{{ awx_git_repo }}"
+    dest: "{{ awx_root }}"
+    # force: false
+    update: false
+
+- name: generate AWX inventory
+  template:
+    src: awx_inventory.j2
+    dest: ~/awx_inventory
+
+- name: generate nginx AWX vhost
+  template:
+    src: proxy_vhost.conf.j2
+    dest: /etc/nginx/conf.d/awx_host.conf
+
+- name: Modify AWX requirements - openstacksdk
+  replace:
+    path: "{{ awx_requirements_location }}"
+    regexp: '^.*openstacksdk==.*$'
+    replace: 'openstacksdk'

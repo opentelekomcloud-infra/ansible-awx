@@ -1,0 +1,69 @@
+
+server {
+  listen 443;
+
+  server_name {{ server_url }};
+
+  ssi on;
+  ssl on;
+  ssl_session_cache shared:SSL:10m;
+  ssl_session_timeout  10m;
+
+{% if ssl_certificate_key is defined and ssl_certificate_key != None %}
+  ssl_certificate_key {{ nginx_ssl_location }}/{{ ssl_certificate_key | basename }};
+{% endif %}
+{% if ssl_certificate is defined and ssl_certificate != None %}
+  ssl_certificate {{ nginx_ssl_location }}/{{ ssl_certificate | basename }};
+{% endif %}
+{% if ssl_client_certificate is defined and ssl_client_certificate != None %}
+  ssl_client_certificate {{ nginx_ssl_location }}/{{ ssl_client_certificate | basename }};
+{% endif %}
+{% if ssl_crl is defined and ssl_crl != None %}
+  ssl_crl {{ nginx_ssl_location }}/{{ ssl_crl | basename }};
+{% endif %}
+{% if ssl_verify_client is defined and ssl_verify_client != None %}
+  ssl_verify_client {{ ssl_verify_client }};
+{% endif %}
+  ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+
+  ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS';
+  ssl_prefer_server_ciphers on;
+#  ssl_ecdh_curve secp521r1;
+  ssl_dhparam {{ nginx_ssl_location }}/dhparams.pem;
+
+  ssl_session_cache shared:SSL:10m;
+  ssl_stapling on;
+  ssl_stapling_verify on;
+  access_log {{ nginx_log_location }}/{{vhost_name}}-access.log combined_ssl;
+  error_log {{ nginx_log_location }}/{{vhost_name}}-error.log;
+
+  ssl_session_cache shared:SSL:10m;
+
+  location / {
+      proxy_pass {{ proxy_pass }};
+
+      client_max_body_size 20m;
+      client_body_buffer_size 20m;
+
+      proxy_connect_timeout 600;
+      proxy_send_timeout 600;
+      proxy_read_timeout 600;
+      send_timeout 600;
+      proxy_redirect http:// https://;
+      proxy_buffering off;
+
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Forwarded-Host $host;
+      proxy_set_header X-Forwarded-Server $host;
+      proxy_set_header X-Forwarded-Port $server_port;
+      proxy_set_header  Upgrade $http_upgrade;
+      proxy_set_header  Connection "upgrade";
+      add_header Front-End-Https on;
+
+  }
+
+}
